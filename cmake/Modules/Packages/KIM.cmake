@@ -53,10 +53,17 @@ if(DOWNLOAD_KIM)
   ExternalProject_get_property(kim_build INSTALL_DIR)
   file(MAKE_DIRECTORY ${INSTALL_DIR}/include/kim-api)
   add_library(LAMMPS::KIM UNKNOWN IMPORTED)
-  set_target_properties(LAMMPS::KIM PROPERTIES
-    IMPORTED_LOCATION "${INSTALL_DIR}/lib/libkim-api${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include/kim-api"
-    )
+  if(NOT MINGW)
+    # Use libkim-api.so on Linux/Unix platforms.
+    set_target_properties(LAMMPS::KIM PROPERTIES
+      IMPORTED_LOCATION "${INSTALL_DIR}/lib/libkim-api${CMAKE_SHARED_LIBRARY_SUFFIX}"
+      INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include/kim-api")
+  else()
+    # Use libkim-api.dll.a on Win32/MinGW platform.
+    set_target_properties(LAMMPS::KIM PROPERTIES
+      IMPORTED_LOCATION "${INSTALL_DIR}/lib/libkim-api${CMAKE_IMPORT_LIBRARY_SUFFIX}"
+      INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include/kim-api")
+  endif()
   add_dependencies(LAMMPS::KIM kim_build)
   target_link_libraries(lammps PRIVATE LAMMPS::KIM)
   # Set rpath so lammps build directory is relocatable
